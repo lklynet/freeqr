@@ -57,12 +57,23 @@
         text: '',
         size: 400,
         errorCorrectionLevel: 'L',
+        transparent: false,
         generateQR() {
             if (!this.text) return;
             const qr = qrcode(0, this.errorCorrectionLevel);
             qr.addData(this.text);
             qr.make();
-            document.getElementById('qrcode').innerHTML = qr.createSvgTag(this.size/25);
+            const svgTag = qr.createSvgTag(this.size/25);
+            // Create a temporary div to parse the SVG string
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = svgTag;
+            const svg = tempDiv.firstChild;
+            // Find the background rect and set fill based on transparency setting
+            const rect = svg.querySelector('rect');
+            if (rect) {
+                rect.setAttribute('fill', this.transparent ? 'none' : 'white');
+            }
+            document.getElementById('qrcode').innerHTML = svg.outerHTML;
         }
     }" x-init="$watch('text', value => generateQR())">
 
@@ -101,6 +112,17 @@
                         <option value="Q">High (25%)</option>
                         <option value="H">Highest (30%)</option>
                     </select>
+                </div>
+
+                <div>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input 
+                            type="checkbox" 
+                            x-model="transparent"
+                            @change="generateQR()"
+                            class="rounded border-gray-300 text-blue-500 focus:ring-blue-500">
+                        <span class="text-sm font-medium text-gray-700">Transparent Background</span>
+                    </label>
                 </div>
             </div>
 
