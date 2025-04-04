@@ -123,6 +123,10 @@
         errorCorrectionLevel: 'L',
         transparent: false,
         isDarkMode: false,
+        toggleClickCount: 0,
+        toggleClickTimer: null,
+        showToggleMessage: false,
+
         initDarkMode() {
             this.isDarkMode = document.documentElement.classList.contains('dark');
         },
@@ -130,6 +134,28 @@
             this.isDarkMode = !this.isDarkMode;
             this.applyDarkMode();
             localStorage.setItem('darkMode', this.isDarkMode);
+
+            // Increment click counter
+            this.toggleClickCount++;
+            
+            // Clear existing timer
+            if (this.toggleClickTimer) {
+                clearTimeout(this.toggleClickTimer);
+            }
+            
+            // Show message if clicked too many times
+            if (this.toggleClickCount >= 5) {
+                this.showToggleMessage = true;
+                setTimeout(() => {
+                    this.showToggleMessage = false;
+                }, 3000);
+                this.toggleClickCount = 0;
+            }
+            
+            // Reset counter after 3 seconds of no clicks
+            this.toggleClickTimer = setTimeout(() => {
+                this.toggleClickCount = 0;
+            }, 3000);
         },
         applyDarkMode() {
             if (this.isDarkMode) {
@@ -163,6 +189,17 @@
                     <button @click="toggleDarkMode" class="dark-mode-toggle w-12 h-7 flex items-center" aria-label="Toggle dark mode">
                         <span class="toggle-circle"></span>
                     </button>
+                                        <!-- Message Popup -->
+                                        <div x-show="showToggleMessage" 
+                                        x-transition:enter="transition ease-out duration-300"
+                                        x-transition:enter-start="opacity-0 transform scale-95"
+                                        x-transition:enter-end="opacity-100 transform scale-100"
+                                        x-transition:leave="transition ease-in duration-200"
+                                        x-transition:leave-start="opacity-100 transform scale-100"
+                                        x-transition:leave-end="opacity-0 transform scale-95"
+                                        class="absolute top-16 right-4 bg-white dark:bg-gray-700 p-3 rounded-lg shadow-lg text-sm text-gray-600 dark:text-gray-300 transition-colors duration-300">
+                                       Stop playing with the lights! 😄
+                                   </div>
                 </div>
             </div>
         </header>
