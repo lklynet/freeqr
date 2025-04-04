@@ -121,7 +121,10 @@
         text: '',
         size: 400,
         errorCorrectionLevel: 'L',
-        transparent: false,
+        // transparent: false, // Removed old transparent state
+        foregroundColor: '#000000',
+        backgroundColor: '#ffffff', // Added background color state
+        backgroundTransparent: false, // Added background transparency state
         isDarkMode: false,
         toggleClickCount: 0,
         toggleClickTimer: null,
@@ -175,13 +178,37 @@
             const svg = tempDiv.firstChild;
             const rect = svg.querySelector('rect');
             if (rect) {
-                rect.setAttribute('fill', this.transparent ? 'none' : 'white');
+                // Use new background states
+                rect.setAttribute('fill', this.backgroundTransparent ? 'none' : this.backgroundColor);
+            }
+            // Apply foreground color to the path
+            const path = svg.querySelector('path');
+            if (path) {
+                path.setAttribute('fill', this.foregroundColor);
             }
             document.getElementById('qrcode').innerHTML = svg.outerHTML;
         },
         downloadPNG() {
-            const svg = document.querySelector('#qrcode svg');
-            const svgData = new XMLSerializer().serializeToString(svg);
+            // Regenerate SVG with current settings to ensure color is correct for download
+            if (!this.text) return;
+            const qr = qrcode(0, this.errorCorrectionLevel);
+            qr.addData(this.text);
+            qr.make();
+            const svgTag = qr.createSvgTag(this.size/25);
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = svgTag;
+            const svgElement = tempDiv.firstChild;
+            const rect = svgElement.querySelector('rect');
+            if (rect) {
+                 // Use new background states for download SVG
+                rect.setAttribute('fill', this.backgroundTransparent ? 'none' : this.backgroundColor);
+            }
+            const path = svgElement.querySelector('path');
+            if (path) {
+                path.setAttribute('fill', this.foregroundColor);
+            }
+            
+            const svgData = new XMLSerializer().serializeToString(svgElement);
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             const img = new Image();
@@ -190,8 +217,9 @@
                 canvas.width = this.size;
                 canvas.height = this.size;
                 
-                if (!this.transparent) {
-                    ctx.fillStyle = 'white';
+                // Use new background states for PNG background fill
+                if (!this.backgroundTransparent) {
+                    ctx.fillStyle = this.backgroundColor;
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
                 }
                 
@@ -278,18 +306,45 @@
                             <option value="H">Highest (30%)</option>
                         </select>
                     </div>
-
+                    
                     <div>
-                        <label class="flex items-center space-x-2 cursor-pointer">
-                            <input 
-                                type="checkbox" 
-                                x-model="transparent"
-                                @change="generateQR()"
-                                class="rounded border-gray-300 text-blue-500 focus:ring-blue-500">
-                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-300">Transparent Background</span>
-                        </label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">Foreground Color</label>
+                        <input 
+                            type="color" 
+                            x-model="foregroundColor"
+                            @input="generateQR()"
+                            class="w-full h-10 px-1 py-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-300"> 
                     </div>
-                </div>
+
+                    <div> 
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">Background Color</label>
+                        <div class="flex items-center gap-2">
+                            <input 
+                                type="color" 
+                                x-model="backgroundColor"
+                                :disabled="backgroundTransparent"
+                                @input="backgroundTransparent = false; generateQR()"
+                                class="flex-grow h-10 px-1 py-1 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <button 
+                                type="button"
+                                @click="backgroundTransparent = !backgroundTransparent; generateQR()"
+                                :class="{ 'bg-blue-100 dark:bg-blue-800 ring-2 ring-blue-500': backgroundTransparent, 'bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600': !backgroundTransparent }"
+                                class="h-10 px-3 border border-gray-300 dark:border-gray-600 rounded-md flex items-center justify-center transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                aria-label="Toggle transparent background">
+                                <svg width="20" height="20" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 fill-current text-gray-500 dark:text-gray-400">
+                                    <defs>
+                                        <pattern id="checkerboard" width="4" height="4" patternUnits="userSpaceOnUse" class="text-gray-300 dark:text-gray-500">
+                                            <rect width="2" height="2" fill="currentColor"/>
+                                            <rect x="2" y="2" width="2" height="2" fill="currentColor"/>
+                                        </pattern>
+                                    </defs>
+                                    <rect width="10" height="10" fill="url(#checkerboard)" />
+                                    <rect width="10" height="10" fill="transparent" stroke="currentColor" stroke-width="0.5"/> {/* Optional border */}
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                 </div>
 
                 <div class="flex justify-center mb-6">
                     <div id="qrcode" class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg transition-colors duration-300"></div>
