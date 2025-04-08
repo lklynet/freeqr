@@ -94,7 +94,7 @@
     <div x-data="{
         text: '',
         size: 400,
-        errorCorrectionLevel: 'L',
+        errorCorrectionLevel: 'M',
         // transparent: false, // Removed old transparent state
         foregroundColor: '#000000',
         backgroundColor: '#ffffff', // Added background color state
@@ -269,7 +269,19 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">Error Correction</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300 flex items-center gap-2">
+                            Error Correction
+                            <div class="relative" x-data="{ showTooltip: false }">
+                                <button @mouseenter="showTooltip = true" @mouseleave="showTooltip = false" type="button" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </button>
+                                <div x-show="showTooltip" x-transition class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 px-4 py-2 bg-gray-900 dark:bg-gray-700 text-white text-sm rounded-lg shadow-lg z-10">
+                                    Error correction allows QR codes to be readable even when partially damaged or obscured. Higher levels add more backup data but make the QR code more complex.
+                                </div>
+                            </div>
+                        </label>
                         <select 
                             x-model="errorCorrectionLevel"
                             @change="generateQR()"
